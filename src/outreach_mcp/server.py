@@ -1,5 +1,7 @@
 from mcp.server.mcpserver import MCPServer
 
+from outreach_mcp.search import search_web as _search_web
+
 mcp = MCPServer("outreach")
 
 
@@ -7,6 +9,12 @@ mcp = MCPServer("outreach")
 def hello(name: str = "world") -> str:
     """Sanity-check tool: confirms the server is wired up and callable."""
     return f"Hello, {name}! The outreach MCP server is running."
+
+
+@mcp.tool()
+def search_web(query: str, max_results: int = 8) -> list[dict[str, str]]:
+    """Search the web via a local SearXNG instance, cached in SQLite."""
+    return _search_web(query, max_results)
 
 
 def main() -> None:
