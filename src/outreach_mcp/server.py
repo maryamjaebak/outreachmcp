@@ -3,6 +3,7 @@ from mcp.server.mcpserver import MCPServer
 from outreach_mcp.fetch import fetch_page as _fetch_page
 from outreach_mcp.leads import LeadProfile
 from outreach_mcp.leads import save_lead as _save_lead
+from outreach_mcp.ranking import rank_leads as _rank_leads
 from outreach_mcp.search import search_web as _search_web
 
 mcp = MCPServer("outreach")
@@ -76,6 +77,31 @@ def save_lead(
         "dropped_evidence_urls": result.dropped_evidence_urls,
         "email_verified": result.email_verified,
     }
+
+
+@mcp.tool()
+def rank_leads(event_id: str, limit: int = 15) -> list[dict[str, object]]:
+    """Rank saved (non-DNC) leads for an event by score, with ~20% explore slots.
+
+    Rubric-only for now (no learned preference model yet — needs
+    log_decision data first to train one).
+    """
+    ranked = _rank_leads(event_id, limit)
+    return [
+        {
+            "company": lead.company,
+            "score": lead.score,
+            "features": lead.features,
+            "contact_name": lead.contact_name,
+            "contact_email": lead.contact_email,
+            "email_verified": lead.email_verified,
+            "contact_type": lead.contact_type,
+            "geography": lead.geography,
+            "evidence_urls": lead.evidence_urls,
+            "explore": lead.explore,
+        }
+        for lead in ranked
+    ]
 
 
 def main() -> None:
