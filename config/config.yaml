@@ -1,0 +1,35 @@
+# Lead-scoring weights and rubric constants. These are reasonable starting
+# values, not empirically derived — tune them once real approve/skip
+# decisions start coming in via log_decision.
+
+weights:
+  event_fit: 0.25
+  propensity: 0.20
+  warm_connection: 0.15
+  contact_quality: 0.15
+  geography: 0.10
+  ask_realism: 0.10
+  n_channels: 0.05
+
+contact_quality:
+  named: 1.0
+  inbox: 0.6
+  form: 0.3
+  none: 0.0
+  # a "named" contact whose email can't be verified verbatim on its source
+  # page is downgraded to this value instead of the full named score
+  unverified_email_downgrade_to: 0.6
+
+geography:
+  london: 1.0
+  uk: 0.85
+  intl_uk_ops: 0.75
+  intl: 0.45
+
+propensity_baseline_no_signal: 0.25
+
+# n_channels / n_channels_cap, capped at 1.0
+n_channels_cap: 3
+
+# final weighted sum (0-1) is multiplied by this to get the reported score
+score_scale: 100
