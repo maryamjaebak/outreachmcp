@@ -22,3 +22,7 @@ All notable changes to this project will be documented in this file.
   appears verbatim on its (previously fetched, not-yet-expired) source page,
   computes a weighted score from `config/config.yaml`'s rubric, and upserts
   into a SQLite `leads` table keyed on `(event_id, company)`.
+- `rank_leads(event_id, limit)` tool: returns saved leads sorted by score
+  with a feature breakdown each, excluding DNC leads entirely. Rubric-only
+  for now (~20% explore slots sampled from the tail, no learned-model blend
+  yet — that needs `log_decision` data first to train a preference model).
