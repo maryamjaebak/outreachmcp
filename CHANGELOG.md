@@ -17,3 +17,8 @@ All notable changes to this project will be documented in this file.
   extracts main text with trafilatura, caches for 7 days, and records the
   URL as seen (for later evidence-URL validation). Tests run against a
   fixture recorded from a real page, no network access required.
+- `save_lead(event_id, ...)` tool: validates a lead profile, drops evidence
+  URLs that were never fetched via `fetch_page`, verifies a claimed email
+  appears verbatim on its (previously fetched, not-yet-expired) source page,
+  computes a weighted score from `config/config.yaml`'s rubric, and upserts
+  into a SQLite `leads` table keyed on `(event_id, company)`.
