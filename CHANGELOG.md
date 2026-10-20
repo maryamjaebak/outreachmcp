@@ -26,3 +26,15 @@ All notable changes to this project will be documented in this file.
   with a feature breakdown each, excluding DNC leads entirely. Rubric-only
   for now (~20% explore slots sampled from the tail, no learned-model blend
   yet — that needs `log_decision` data first to train a preference model).
+- Society knowledge resources (`society://profile`, `past-events`,
+  `past-sponsors`, `sponsorship-pack`, `style`): read `society/<section>.md`
+  (gitignored, real data), falling back to the shipped `society.example/`
+  placeholder until it's populated.
+- `update_society_info(section, text)` tool: appends a fact to a society
+  section, seeding it from the example file on first write.
+- `find_sponsors(event)` prompt: encodes the full sponsorship-outreach
+  workflow (read event + society knowledge, plan searches across 8 channels,
+  search/fetch/save_lead, rank_leads + log_decision, draft + log_email) and
+  its hard rules (sourced claims, no guessed emails, no LinkedIn, <150 words,
+  one hook, opt-out line, nothing sent without approval). Some referenced
+  tools (`log_decision`, `style_examples`, `log_email`) don't exist yet.
