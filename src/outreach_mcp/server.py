@@ -3,8 +3,11 @@ from mcp.server.mcpserver import MCPServer
 from outreach_mcp.fetch import fetch_page as _fetch_page
 from outreach_mcp.leads import LeadProfile
 from outreach_mcp.leads import save_lead as _save_lead
+from outreach_mcp.prompts import find_sponsors_prompt
 from outreach_mcp.ranking import rank_leads as _rank_leads
 from outreach_mcp.search import search_web as _search_web
+from outreach_mcp.society import read_section as _read_section
+from outreach_mcp.society import update_society_info as _update_society_info
 
 mcp = MCPServer("outreach")
 
@@ -102,6 +105,53 @@ def rank_leads(event_id: str, limit: int = 15) -> list[dict[str, object]]:
         }
         for lead in ranked
     ]
+
+
+@mcp.resource("society://profile")
+def society_profile() -> str:
+    """Who the society is: what it does, member count, past achievements."""
+    return _read_section("profile")
+
+
+@mcp.resource("society://past-events")
+def society_past_events() -> str:
+    """Past events: name, date, attendance, notable outcomes."""
+    return _read_section("past-events")
+
+
+@mcp.resource("society://past-sponsors")
+def society_past_sponsors() -> str:
+    """Past sponsors: company, tier, year, what they got in return."""
+    return _read_section("past-sponsors")
+
+
+@mcp.resource("society://sponsorship-pack")
+def society_sponsorship_pack() -> str:
+    """Sponsorship pack: tiers, pricing, benefits."""
+    return _read_section("sponsorship-pack")
+
+
+@mcp.resource("society://style")
+def society_style() -> str:
+    """Style guide for outreach emails."""
+    return _read_section("style")
+
+
+@mcp.tool()
+def update_society_info(section: str, text: str) -> str:
+    """Append a fact to a society knowledge section.
+
+    `section` must be one of: profile, past-events, past-sponsors,
+    sponsorship-pack, style.
+    """
+    _update_society_info(section, text)
+    return f"appended to society/{section}.md"
+
+
+@mcp.prompt()
+def find_sponsors(event: str) -> str:
+    """Guide the sponsorship-outreach workflow for one event, start to finish."""
+    return find_sponsors_prompt(event)
 
 
 def main() -> None:
