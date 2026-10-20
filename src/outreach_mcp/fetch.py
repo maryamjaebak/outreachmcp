@@ -12,7 +12,13 @@ from outreach_mcp.cache import Cache
 from outreach_mcp.ratelimit import PerDomainRateLimiter
 from outreach_mcp.seen import mark_seen, was_seen
 
-__all__ = ["fetch_page", "was_seen", "RobotsDisallowedError", "PerDomainRateLimiter"]
+__all__ = [
+    "fetch_page",
+    "get_full_text",
+    "was_seen",
+    "RobotsDisallowedError",
+    "PerDomainRateLimiter",
+]
 
 DATABASE_PATH = os.environ.get("DATABASE_PATH", "./outreach.db")
 CACHE_TTL_SECONDS = 7 * 24 * 60 * 60
@@ -67,9 +73,24 @@ def fetch_page(url: str, max_chars: int = 4000) -> str:
     response = requests.get(url, headers={"User-Agent": USER_AGENT}, timeout=10)
     response.raise_for_status()
 
-    text = trafilatura.extract(response.text) or ""
-    text = text[:max_chars]
+    full_text = trafilatura.extract(response.text) or ""
+    cache.set(f"page_full:{url}", full_text, CACHE_TTL_SECONDS)
 
+    text = full_text[:max_chars]
     cache.set(key, text, CACHE_TTL_SECONDS)
     mark_seen(DATABASE_PATH, url)
     return text
+
+
+def get_full_text(url: str) -> str | None:
+    """Return the full (untruncated) cached text for a URL, or None if not cached.
+
+    Used to verify claims (e.g. an email appears verbatim) against a URL's actual
+    content without re-fetching it. Returns None if the page was never fetched, or
+    if its content cache entry has since expired (TTL'd separately from `seen_urls`,
+    which never expires) — in that case the caller should treat the claim as
+    unverifiable rather than trust it.
+    """
+    cache = Cache(DATABASE_PATH)
+    cached = cache.get(f"page_full:{url}")
+    return cast(str, cached) if cached is not None else None

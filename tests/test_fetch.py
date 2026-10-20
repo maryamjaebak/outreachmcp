@@ -76,3 +76,20 @@ def test_fetch_page_raises_when_robots_disallows(monkeypatch: pytest.MonkeyPatch
 
     with pytest.raises(fetch.RobotsDisallowedError):
         fetch.fetch_page(URL)
+
+
+@responses.activate
+def test_get_full_text_returns_untruncated_text_after_fetch() -> None:
+    responses.get(URL, body=FIXTURE_HTML, status=200)
+
+    fetch.fetch_page(URL, max_chars=50)  # truncated return value, full text still cached
+
+    full_text = fetch.get_full_text(URL)
+
+    assert full_text is not None
+    assert len(full_text) > 50
+    assert "Empowering the next generation of engineers" in full_text
+
+
+def test_get_full_text_returns_none_when_never_fetched() -> None:
+    assert fetch.get_full_text(URL) is None
