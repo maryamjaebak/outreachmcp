@@ -9,6 +9,5 @@ search:
     - json
 
 server:
-  # Generate your own: python3 -c "import secrets; print(secrets.token_hex(16))"
-  secret_key: "CHANGE_ME"
+  secret_key: "a1df2bd4e2ff0bac20da270ad2b9ccc7"
   limiter: false
