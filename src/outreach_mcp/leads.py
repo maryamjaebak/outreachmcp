@@ -14,7 +14,7 @@ DATABASE_PATH = os.environ.get("DATABASE_PATH", "./outreach.db")
 _VALID_CONTACT_TYPES = {"named", "inbox", "form", "none"}
 _VALID_GEOGRAPHIES = {"london", "uk", "intl_uk_ops", "intl"}
 
-_LEADS_SCHEMA = """
+LEADS_SCHEMA = """
 CREATE TABLE IF NOT EXISTS leads (
     event_id TEXT NOT NULL,
     company TEXT NOT NULL,
@@ -103,7 +103,7 @@ def _upsert(
 ) -> None:
     conn = sqlite3.connect(DATABASE_PATH)
     try:
-        conn.execute(_LEADS_SCHEMA)
+        conn.execute(LEADS_SCHEMA)
         conn.execute(
             """
             INSERT INTO leads (
