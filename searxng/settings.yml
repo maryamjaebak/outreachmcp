@@ -1,0 +1,14 @@
+use_default_settings: true
+
+general:
+  instance_name: "outreach-mcp searxng"
+
+search:
+  formats:
+    - html
+    - json
+
+server:
+  # Generate your own: python3 -c "import secrets; print(secrets.token_hex(16))"
+  secret_key: "CHANGE_ME"
+  limiter: false
