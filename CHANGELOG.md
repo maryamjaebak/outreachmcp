@@ -61,3 +61,7 @@ All notable changes to this project will be documented in this file.
   coefficients (once one exists), approve/skip/dnc counts and approval
   rate, a countdown to the next retrain, and a style-similarity trend
   (overall vs recent average, flagged for review every 10 logged emails).
+- ADRs for the project's real architectural decisions (`docs/adr/`): MCP
+  SDK v2, single-SQLite storage, dataclasses over pydantic, the seen-URLs/
+  content-cache split, and the learning architecture (logistic regression +
+  linear Thompson sampling).
