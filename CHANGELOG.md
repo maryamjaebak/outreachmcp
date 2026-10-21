@@ -50,3 +50,10 @@ All notable changes to this project will be documented in this file.
 - `style_examples(event_id, company, k)` tool: returns up to k past final
   emails as few-shot examples — same-company history first, falling back to
   the global pool, replied-to emails prioritized either way.
+- `log_outcome(event_id, company, outcome)` tool: records an outcome
+  (replied/meeting/sponsored/declined, reward 0.5/0.75/1.0/0.0) and updates
+  a linear-Thompson-sampling contextual bandit (NumPy, `bandit.py`) keyed on
+  the lead's feature vector. Re-logging an outcome for the same lead adjusts
+  its reward rather than double-counting the observation. `rank_leads`'s
+  explore slots now use Thompson sampling once any outcome has been logged
+  (falls back to a random tail sample until then).
