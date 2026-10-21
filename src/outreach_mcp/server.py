@@ -5,6 +5,7 @@ from outreach_mcp.emails import style_examples as _style_examples
 from outreach_mcp.fetch import fetch_page as _fetch_page
 from outreach_mcp.leads import LeadProfile
 from outreach_mcp.leads import save_lead as _save_lead
+from outreach_mcp.outcomes import log_outcome as _log_outcome
 from outreach_mcp.preference_model import log_decision as _log_decision
 from outreach_mcp.prompts import find_sponsors_prompt
 from outreach_mcp.ranking import rank_leads as _rank_leads
@@ -108,6 +109,17 @@ def style_examples(event_id: str, company: str, k: int = 3) -> list[dict[str, ob
     """Return up to k past final emails as few-shot style examples, replied-to first."""
     examples = _style_examples(event_id, company, k)
     return [{"company": ex.company, "final": ex.final, "replied": ex.replied} for ex in examples]
+
+
+@mcp.tool()
+def log_outcome(event_id: str, company: str, outcome: str) -> str:
+    """Log an outcome (replied/meeting/sponsored/declined) and update the bandit.
+
+    Needs a lead already saved via save_lead. Drives rank_leads's explore
+    slots via Thompson sampling once any outcome has been logged.
+    """
+    _log_outcome(event_id, company, outcome)
+    return f"logged outcome {outcome!r} for {company}"
 
 
 @mcp.tool()
