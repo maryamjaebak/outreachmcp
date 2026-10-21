@@ -23,9 +23,8 @@ All notable changes to this project will be documented in this file.
   computes a weighted score from `config/config.yaml`'s rubric, and upserts
   into a SQLite `leads` table keyed on `(event_id, company)`.
 - `rank_leads(event_id, limit)` tool: returns saved leads sorted by score
-  with a feature breakdown each, excluding DNC leads entirely. Rubric-only
-  for now (~20% explore slots sampled from the tail, no learned-model blend
-  yet — that needs `log_decision` data first to train a preference model).
+  with a feature breakdown each, excluding DNC leads entirely, with ~20%
+  explore slots sampled from the tail.
 - Society knowledge resources (`society://profile`, `past-events`,
   `past-sponsors`, `sponsorship-pack`, `style`): read `society/<section>.md`
   (gitignored, real data), falling back to the shipped `society.example/`
@@ -36,5 +35,18 @@ All notable changes to this project will be documented in this file.
   workflow (read event + society knowledge, plan searches across 8 channels,
   search/fetch/save_lead, rank_leads + log_decision, draft + log_email) and
   its hard rules (sourced claims, no guessed emails, no LinkedIn, <150 words,
-  one hook, opt-out line, nothing sent without approval). Some referenced
-  tools (`log_decision`, `style_examples`, `log_email`) don't exist yet.
+  one hook, opt-out line, nothing sent without approval).
+- `log_decision(event_id, company, action, reason)` tool: records an
+  approve/skip/dnc decision (snapshotting the lead's feature vector so later
+  retraining always uses what was actually judged), flips the lead's own
+  `dnc` flag on a "dnc" decision, and retrains a logistic-regression
+  preference model (scikit-learn, `C=0.5`) once 40+ approve/skip decisions
+  exist. `rank_leads` now blends the rubric with the trained model's
+  `P(approve)`: `(1-alpha)*rubric + alpha*P(approve)*100`, where `alpha`
+  grows with decision count up to a cap of 0.7, falling back to the pure
+  rubric score until a model exists.
+- `log_email(event_id, company, draft, final)` tool: stores the pair with a
+  `difflib`-based similarity score (0-1).
+- `style_examples(event_id, company, k)` tool: returns up to k past final
+  emails as few-shot examples — same-company history first, falling back to
+  the global pool, replied-to emails prioritized either way.
