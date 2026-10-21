@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-10-21
+
 ### Added
 - Project scaffold: uv project with `src/` layout, FastMCP-style hello tool
   (MCP SDK v2's `MCPServer`), ruff/mypy/pytest config, pre-commit hooks,
