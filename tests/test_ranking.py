@@ -1,9 +1,10 @@
 import random
 from pathlib import Path
 
+import numpy as np
 import pytest
 
-from outreach_mcp import fetch, leads, preference_model, ranking
+from outreach_mcp import bandit, fetch, leads, outcomes, preference_model, ranking
 
 
 @pytest.fixture(autouse=True)
@@ -14,6 +15,8 @@ def _isolated_db(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(ranking, "DATABASE_PATH", db_path)
     monkeypatch.setattr(preference_model, "DATABASE_PATH", db_path)
     monkeypatch.setattr(preference_model, "MODEL_PATH", str(tmp_path / "model.pkl"))
+    monkeypatch.setattr(outcomes, "DATABASE_PATH", db_path)
+    monkeypatch.setattr(bandit, "BANDIT_PATH", str(tmp_path / "bandit.pkl"))
 
 
 def _save(company: str, event_fit: float, dnc: bool = False) -> None:
@@ -148,3 +151,26 @@ def test_dnc_via_log_decision_removes_lead_from_ranking() -> None:
     ranked = ranking.rank_leads("event-1")
 
     assert ranked == []
+
+
+def test_explore_slots_are_random_before_any_outcome_logged() -> None:
+    for i in range(10):
+        _save(f"Company{i}", event_fit=float(i % 6))
+
+    assert bandit.has_outcomes() is False
+    ranked = ranking.rank_leads("event-1", limit=5, rng=random.Random(0))
+
+    assert sum(1 for r in ranked if r.explore) == 1
+
+
+def test_explore_slots_use_bandit_once_an_outcome_exists() -> None:
+    for i in range(10):
+        _save(f"Company{i}", event_fit=float(i % 6))
+    outcomes.log_outcome("event-1", "Company0", "replied")
+
+    assert bandit.has_outcomes() is True
+    ranked = ranking.rank_leads(
+        "event-1", limit=5, rng=random.Random(0), np_rng=np.random.default_rng(0)
+    )
+
+    assert sum(1 for r in ranked if r.explore) == 1

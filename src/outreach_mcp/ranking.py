@@ -5,6 +5,9 @@ import random
 import sqlite3
 from dataclasses import dataclass, replace
 
+import numpy as np
+
+from outreach_mcp.bandit import has_outcomes, sample_score
 from outreach_mcp.leads import DATABASE_PATH, LEADS_SCHEMA
 from outreach_mcp.preference_model import count_trainable_decisions, predict_approval_probability
 
@@ -71,8 +74,29 @@ def _blend_with_learned_model(lead: RankedLead, n_decisions: int) -> RankedLead:
     return replace(lead, score=blended)
 
 
+def _select_explore(
+    tail: list[RankedLead],
+    explore_count: int,
+    rng: random.Random,
+    np_rng: np.random.Generator | None,
+) -> list[RankedLead]:
+    if explore_count <= 0 or not tail:
+        return []
+    explore_count = min(explore_count, len(tail))
+    if has_outcomes():
+        # Thompson sampling: favors under-explored feature regions, not
+        # just whatever currently scores highest.
+        return sorted(tail, key=lambda c: sample_score(c.features, np_rng), reverse=True)[
+            :explore_count
+        ]
+    return rng.sample(tail, explore_count)
+
+
 def rank_leads(
-    event_id: str, limit: int = 15, rng: random.Random | None = None
+    event_id: str,
+    limit: int = 15,
+    rng: random.Random | None = None,
+    np_rng: np.random.Generator | None = None,
 ) -> list[RankedLead]:
     """Rank saved leads for an event by score, with ~20% explore slots.
 
@@ -83,6 +107,11 @@ def rank_leads(
     `preference_model.py` — untrained until 40+ decisions exist, in which
     case this falls back to the rubric score untouched). DNC leads are
     excluded entirely, not just scored to zero.
+
+    Explore slots are chosen via Thompson sampling on the contextual bandit
+    (see `bandit.py`) once any outcome has been logged; before that, there's
+    nothing for the bandit to have learned yet, so they're a plain random
+    sample of the tail instead.
     """
     rng = rng or random.Random()
     candidates = _fetch_candidates(event_id)
@@ -98,6 +127,6 @@ def rank_leads(
 
     exploit = ranked_by_score[:exploit_count]
     tail = ranked_by_score[exploit_count:]
-    explore = [replace(c, explore=True) for c in rng.sample(tail, min(explore_count, len(tail)))]
+    explore = [replace(c, explore=True) for c in _select_explore(tail, explore_count, rng, np_rng)]
 
     return sorted(exploit + explore, key=lambda c: c.score, reverse=True)
