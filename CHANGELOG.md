@@ -57,3 +57,7 @@ All notable changes to this project will be documented in this file.
   its reward rather than double-counting the observation. `rank_leads`'s
   explore slots now use Thompson sampling once any outcome has been logged
   (falls back to a random tail sample until then).
+- `insights()` tool: rubric weights vs the trained preference model's
+  coefficients (once one exists), approve/skip/dnc counts and approval
+  rate, a countdown to the next retrain, and a style-similarity trend
+  (overall vs recent average, flagged for review every 10 logged emails).
