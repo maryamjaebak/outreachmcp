@@ -1,8 +1,11 @@
 from mcp.server.mcpserver import MCPServer
 
+from outreach_mcp.emails import log_email as _log_email
+from outreach_mcp.emails import style_examples as _style_examples
 from outreach_mcp.fetch import fetch_page as _fetch_page
 from outreach_mcp.leads import LeadProfile
 from outreach_mcp.leads import save_lead as _save_lead
+from outreach_mcp.preference_model import log_decision as _log_decision
 from outreach_mcp.prompts import find_sponsors_prompt
 from outreach_mcp.ranking import rank_leads as _rank_leads
 from outreach_mcp.search import search_web as _search_web
@@ -83,11 +86,37 @@ def save_lead(
 
 
 @mcp.tool()
+def log_decision(event_id: str, company: str, action: str, reason: str = "") -> str:
+    """Log an approve/skip/dnc decision on a lead already saved via save_lead.
+
+    Retrains the preference model once enough approve/skip decisions exist
+    (40+), which rank_leads then blends into its scores. A "dnc" decision
+    also marks the lead itself do-not-contact.
+    """
+    _log_decision(event_id, company, action, reason)
+    return f"logged {action} for {company}"
+
+
+@mcp.tool()
+def log_email(event_id: str, company: str, draft: str, final: str) -> float:
+    """Store a draft/final email pair and return their similarity (0-1)."""
+    return _log_email(event_id, company, draft, final)
+
+
+@mcp.tool()
+def style_examples(event_id: str, company: str, k: int = 3) -> list[dict[str, object]]:
+    """Return up to k past final emails as few-shot style examples, replied-to first."""
+    examples = _style_examples(event_id, company, k)
+    return [{"company": ex.company, "final": ex.final, "replied": ex.replied} for ex in examples]
+
+
+@mcp.tool()
 def rank_leads(event_id: str, limit: int = 15) -> list[dict[str, object]]:
     """Rank saved (non-DNC) leads for an event by score, with ~20% explore slots.
 
-    Rubric-only for now (no learned preference model yet — needs
-    log_decision data first to train one).
+    Blends the rubric with the learned preference model once enough
+    decisions exist (see log_decision); falls back to the rubric score
+    alone until then.
     """
     ranked = _rank_leads(event_id, limit)
     return [
