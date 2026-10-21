@@ -9,5 +9,6 @@ dist/
 
 .env
 *.db
+*.pkl
 cache/
 society/

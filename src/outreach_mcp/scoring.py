@@ -8,6 +8,18 @@ import yaml
 
 CONFIG_PATH = os.environ.get("CONFIG_PATH", "./config/config.yaml")
 
+# Single source of truth for feature order — the preference model's input
+# vector must match this exactly, since it's trained on saved features dicts.
+FEATURE_NAMES = (
+    "event_fit",
+    "propensity",
+    "warm_connection",
+    "contact_quality",
+    "geography",
+    "ask_realism",
+    "n_channels",
+)
+
 
 @dataclass(frozen=True)
 class ScoringConfig:
@@ -67,7 +79,7 @@ def compute_score(
     if contact_type == "named" and not email_verified:
         contact_quality_norm = config.contact_quality["unverified_email_downgrade_to"]
 
-    features = {
+    raw_features = {
         "event_fit": event_fit / 5.0,
         "propensity": propensity if propensity_signal else config.propensity_baseline_no_signal,
         "warm_connection": 1.0 if warm_connection else 0.0,
@@ -76,6 +88,7 @@ def compute_score(
         "ask_realism": ask_realism / 5.0,
         "n_channels": min(n_channels / config.n_channels_cap, 1.0),
     }
+    features = {name: raw_features[name] for name in FEATURE_NAMES}
 
     weighted_sum = sum(features[name] * config.weights[name] for name in features)
     return ScoreResult(total=weighted_sum * config.score_scale, features=features)
