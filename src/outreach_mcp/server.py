@@ -3,6 +3,7 @@ from mcp.server.mcpserver import MCPServer
 from outreach_mcp.emails import log_email as _log_email
 from outreach_mcp.emails import style_examples as _style_examples
 from outreach_mcp.fetch import fetch_page as _fetch_page
+from outreach_mcp.insights import insights as _insights
 from outreach_mcp.leads import LeadProfile
 from outreach_mcp.leads import save_lead as _save_lead
 from outreach_mcp.outcomes import log_outcome as _log_outcome
@@ -193,6 +194,25 @@ def update_society_info(section: str, text: str) -> str:
 def find_sponsors(event: str) -> str:
     """Guide the sponsorship-outreach workflow for one event, start to finish."""
     return find_sponsors_prompt(event)
+
+
+@mcp.tool()
+def insights() -> dict[str, object]:
+    """Learned vs rubric weights, approval rates, and the style-similarity trend."""
+    result = _insights()
+    return {
+        "rubric_weights": result.rubric_weights,
+        "learned_weights": result.learned_weights,
+        "decisions": result.decisions,
+        "approval_rate": result.approval_rate,
+        "decisions_until_model_trains": result.decisions_until_model_trains,
+        "style": {
+            "count": result.style.count,
+            "overall_avg": result.style.overall_avg,
+            "recent_avg": result.style.recent_avg,
+            "due_for_style_review": result.style.due_for_style_review,
+        },
+    }
 
 
 def main() -> None:
