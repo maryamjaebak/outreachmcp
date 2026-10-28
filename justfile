@@ -2,6 +2,7 @@
 setup:
     uv sync
     uv run pre-commit install
+    test -f searxng/settings.yml || sed "s/ultrasecretkey/$(openssl rand -hex 32)/" searxng/settings.yml.template > searxng/settings.yml
 
 # check code style and types, no changes written
 lint:

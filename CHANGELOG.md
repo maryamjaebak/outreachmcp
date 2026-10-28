@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Changed
+- SearXNG no longer ships a fixed, committed `secret_key`. `searxng/settings.yml`
+  is now generated from a gitignored copy of `searxng/settings.yml.template`
+  (the placeholder-containing file that stays in git) by `just setup`, with a
+  fresh random key substituted in on first run via `openssl rand -hex 32`.
+
 ## [1.0.0] - 2026-10-21
 
 ### Added

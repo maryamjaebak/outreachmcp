@@ -12,3 +12,4 @@ dist/
 *.pkl
 cache/
 society/
+searxng/settings.yml
